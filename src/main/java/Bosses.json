@@ -1,0 +1,25 @@
+{
+  "DemonKing": [
+    {"bossName" :  "Baran " ,"bossType":"Demon king","id":1, "bosshp" :  3000  , "bossdmg": 150 ,"bosslevel": 30 ,"expvalue": 3000 , "requiredlvl": 1 },
+    {"bossName" :  "Ainz" ,"bossType":"Demon king","id":2, "bosshp" :  3500  , "bossdmg": 175 ,"bosslevel":35 ,"expvalue":3500,"requiredlvl": 1  },
+    {"bossName" :  "Diablo" ,"bossType":"Demon king","id":3, "bosshp" :  3750  , "bossdmg":200 ,"bosslevel":40 ,"expvalue":4000 ,"requiredlvl": 1 }
+  ],
+
+  "Dragon": [
+    {"bossName" :  "Igneel" ,"bossType":"Dragon","id":4, "bosshp" :  3000  , "bossdmg": 150,"bosslevel":31 ,"expvalue": 3100,"requiredlvl": 1  },
+    {"bossName" :  "Kamish" ,"bossType":"Dragon","id":5, "bosshp" :  3500  , "bossdmg": 175,"bosslevel":34 ,"expvalue": 3400,"requiredlvl": 1  },
+    {"bossName" :  "Kaido" ,"bossType":"Dragon","id":6, "bosshp" :  3750  , "bossdmg": 200,"bosslevel": 39,"expvalue":3900,"requiredlvl": 1  }
+  ],
+
+  "Minotaur": [
+    {"bossName" :  "Man Bull" ,"bossType":"Minotaur","id":7, "bosshp" :  3200  , "bossdmg": 140,"bosslevel":29 ,"expvalue":2900,"requiredlvl": 1  },
+    {"bossName" :  "Goliath" ,"bossType":"Minotaur","id":8, "bosshp" :  3700  , "bossdmg":170 ,"bosslevel":37 ,"expvalue": 3700,"requiredlvl": 1 }
+  ],
+
+  "Monarch": [
+    {"bossName" :  "Tarnak" ,"bossType":"Monarch","id":9, "bosshp" :  30000  , "bossdmg":1500 ,"bosslevel":89 ,"expvalue":30000 ,"requiredlvl": 100 },
+    {"bossName" :  "Rakan" ,"bossType":"Monarch","id":10, "bosshp" :  35000  , "bossdmg":1750 ,"bosslevel": 95,"expvalue": 35000,"requiredlvl": 100 },
+    {"bossName" :  "Antares" ,"bossType":"Monarch","id":11, "bosshp" :  40000  , "bossdmg":2100 ,"bosslevel": 101 ,"expvalue":41200,"requiredlvl": 100  }
+
+  ]
+}
