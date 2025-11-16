@@ -5,8 +5,7 @@ import Facade.Items.DungeonFacade;
 import Factory.Hero.*;
 import Factory.Monsters.*;
 import Factory.Boss.*;
-import Observers.BattleLogger;
-import Observers.Subject;
+
 import Strategy.AttackStrategy;
 
 import java.util.List;
@@ -19,7 +18,7 @@ public class GameFacade {
     private final MonsterFactory monsterFactory = new MonsterFactory();
     private final BossFactory bossFactory = new BossFactory();
     private final Scanner scanner = new Scanner(System.in);
-    private String currentRank = "E"; // Текущий ранг охотника
+    private String currentRank = "E";
 
     public GameFacade() {
         createHeroAndStart();
@@ -61,7 +60,7 @@ public class GameFacade {
         mainMenu();
     }
 
-    // ГЛАВНОЕ МЕНЮ
+
     private void mainMenu() {
         while (true) {
             System.out.println("\n╔══════════════════════════════════════════╗");
@@ -92,7 +91,7 @@ public class GameFacade {
         }
     }
 
-    // ВЫБОР ДАНЖА
+
     private void chooseDungeon() {
         System.out.println("\nAvailable Gates:");
         if (currentRank.compareTo("E") >= 0) System.out.println("  1. E-rank → Abandoned Mine");
@@ -120,7 +119,7 @@ public class GameFacade {
         DungeonBuilder dungeon = dungeonFacade.createDungeon(dungeonType);
         enterDungeon(dungeon);
 
-        // Повышаем ранг
+
         currentRank = switch (dungeonType) {
             case "e rank dungeon" -> "D";
             case "d rank dungeon" -> "C";
@@ -131,12 +130,12 @@ public class GameFacade {
         };
     }
 
-    // ВХОД В ДАНЖ
+
     private void enterDungeon(DungeonBuilder dungeon) {
         System.out.printf("\nGate opened: %s\n", dungeon.getName());
         System.out.println(dungeon.getDescription() + "\n");
 
-        // Монстры
+
         for (int i = 0; i < dungeon.getMonsters(); i++) {
             String[] types = {"goblin", "direwolf", "orc", "demon", "skeleton"};
             Monster m = monsterFactory.createMonster(types[(int)(Math.random() * types.length)]);
@@ -148,7 +147,7 @@ public class GameFacade {
             }
         }
 
-        // Босс
+
         Boss boss = bossFactory.createBoss(dungeon.getBoss());
         System.out.println("\nBOSS ROOM OPENED: " + boss.getBossName());
         fightBoss(boss);
@@ -166,7 +165,7 @@ public class GameFacade {
         }
     }
 
-    // БОЙ С МОНСТРОМ
+
     private void fightMonster(Monster monster) {
         while (monster.getMonsterhp() > 0 && hero.getHp() > 0) {
             System.out.printf("\n%s [HP: %d]  vs  %s [HP: %d]\n",
@@ -196,7 +195,7 @@ public class GameFacade {
         }
     }
 
-    // БОЙ С БОССОМ
+
     private void fightBoss(Boss boss) {
         while (boss.getBosshhp() > 0 && hero.getHp() > 0) {
             System.out.printf("\n%s [HP: %d]  vs  %s [HP: %d]\n",
@@ -215,7 +214,7 @@ public class GameFacade {
         }
     }
 
-    // ИНВЕНТАРЬ И ЭКИПИРОВКА
+
     private void showInventoryAndEquip() {
         if (hero.getInventory().isEmpty()) {
             System.out.println("Inventory is empty.");
@@ -261,7 +260,6 @@ public class GameFacade {
                 hero.getHp(), hero.getTotalHP(), hero.getGold(), hero.getInventory().size());
     }
 
-    // Безопасное чтение int
     private int readInt() {
         while (true) {
             try {

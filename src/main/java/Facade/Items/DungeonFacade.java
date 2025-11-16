@@ -23,7 +23,7 @@ public class DungeonFacade {
                         .setDescription("Elite shadowborn monsters. Monarch's overwhelming aura.")
                         .setFloors(10)
                         .setMonsters(50)
-                        .setBoss("monarch")                 // <<<< FIX
+                        .setBoss("monarch")
                         .setArtifact(artifact)
                         .setArtifactDropChance(50)
                         .setReward("Monarch Core")
