@@ -1,6 +1,5 @@
 package Factory.Hero;
 
-import Factory.Monsters.Monster;
 import Strategy.AttackStrategy;
 import Strategy.Summoner.*;
 import Visitor.Visitor;
@@ -28,8 +27,10 @@ public class Summoner extends Hero {
         this.orichi = new OrichiD();
         this.zheng = new ZhengB();
         this.phoenix=new PhoenixS();
+        unlockedskills.add(minion);
+        unlockedskills.add(phoenix);
 
-        this.strategy=shadowWolf;
+        this.strategy=minion;
     }
 
     public void minion(){
@@ -71,5 +72,10 @@ public class Summoner extends Hero {
     @Override
     public void accept(Visitor visitor) {
         visitor.visitSummoner(this);
+    }
+
+    @Override
+    public void notifyObservers(String eventType) {
+
     }
 }

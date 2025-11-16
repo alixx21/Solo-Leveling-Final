@@ -1,7 +1,7 @@
 package Factory.Boss;
 
 public class GoblinLeaderE extends Boss {
-    public GoblinLeaderE() {
+    public GoblinLeaderE(String BossName, String BossType) {
         super("Vrek","GoblinLeader");
 
         this.bosshp=2000;

@@ -1,112 +1,225 @@
 package Factory.Hero;
 
+import Builder.ArmorBuilder;
+import Builder.PoisonBuilder;
+import Builder.WeaponBuilder;
+import Facade.Sellable;
 import Factory.Boss.Boss;
 import Factory.Monsters.Monster;
-import Strategy.*;
-import Visitor.*;
+import Strategy.AttackStrategy;
+import Visitor.Visitor;
 import Observers.*;
+import Builder.ArtifactBuilder;
+import Observers.EventManager;
+import Visitor.SkillUnlockVisitor;
+
 import java.util.ArrayList;
 import java.util.List;
 
-public abstract class Hero implements Subject {
-    private List<Observer> observers =  new ArrayList<>();
-    protected List<AttackStrategy> unlockedskills = new ArrayList<>();
+public abstract class Hero implements GameObserver {
+    private List<GameObserver> observers = new ArrayList<>();
+    public List<AttackStrategy> unlockedskills = new ArrayList<>();
+    public List<Sellable> inventory = new ArrayList<>();
 
     protected String heroName;
     protected String heroTitle;
     protected String heroType;
     protected String evolveType;
     protected AttackStrategy strategy;
-    protected int damage ;
-    protected int herohp ;
-    protected int lvl = 1;
+    protected double artifactDamageMultiplier = 1.0;
+    protected int damage;
+    protected int herohp;
+    protected int lvl ;
     protected int exp = 0;
+    private int gold = 100;
+    private int armorBonusHP = 0;
+    private WeaponBuilder equippedWeapon = null;
+    private ArmorBuilder equippedArmor = null;
+    private PoisonBuilder equippedPoison = null;
+    private ArtifactBuilder equippedArtifact = null;
 
-    protected Hero(String heroName,AttackStrategy strategy,String heroType){
+    protected Hero(String heroName, AttackStrategy strategy, String heroType) {
         this.heroName = heroName;
         this.strategy = strategy;
         this.heroType = heroType;
         this.evolveType = "";
         this.heroTitle = "";
+        this.armorBonusHP = 0;
     }
 
-    public void attack(Monster monster){
 
-        if (strategy == null) {
-            System.out.println("No strategy selected!");
-            return;
-        }
+    public int getTotalHP() {
+        return herohp + armorBonusHP;
+    }
+    public void attack(Monster monster) {
         int finaldamage = calculateDamage();
         monster.takeDamage(finaldamage);
+        notifyObservers(heroName + " attacks " + monster.getMonsterType() + " for " + finaldamage + " damage");
 
-        notifyObservers(heroName + " attacks " + monster.getMonsterType() + " with " + strategy.getClass().getSimpleName());
-
-        if(monster.monsterhp > 0){
+        if (monster.monsterhp > 0) {
             monster.monsterresponce(this);
-        }else{
-            notifyObservers(monster.getMonsterType() + " has been defeated!");
+        } else {
+            notifyObservers(monster.getMonsterType() + " defeated");
             gainExp(monster.getMonsterexpvalue());
         }
     }
 
-
-    public void attackBoss(Boss boss){
-        if (strategy == null) {
-            System.out.println("No strategy selected!");
-            return;
-        }
+    public void attackBoss(Boss boss) {
         int finaldamage = calculateDamage();
         boss.takeDamageBoss(finaldamage);
+        notifyObservers(heroName + " attacks " + boss.getBossName() + " for " + finaldamage + " damage");
 
-        notifyObservers("Used:"+strategy);
-        if(boss.getBosshhp() > 0){
+
+        if (boss.getBosshhp() > 0) {
             boss.bossresponce(this);
-        }else{
-            notifyObservers(boss.getBossName() + " has been defeated!");
+        } else {
+            notifyObservers(boss.getBossName() + " defeated");
             gainExp(boss.getExpvalue());
         }
     }
 
-    public void takeDamage(int dmg){
-        this.herohp -= dmg;
+    public int calculateDamage() {
+        return (int) ((damage * strategy.getMultiplier()) * artifactDamageMultiplier);
+
     }
 
-    public void unlockedskills(AttackStrategy skills){
-        unlockedskills.add(skills);
-        notifyObservers(heroName + " unlocked skills:" + skills.getClass().getSimpleName());
-    }
+    public void takeDamage(int dmg) {
+        int effectiveHP = herohp + armorBonusHP;
+        effectiveHP -= dmg;
 
-
-    public void gainExp(int exp){
-        this.exp += exp;
-        while(this.exp>=lvl *100){
-            this.exp -= lvl *100;
-            lvl++;
-            damage+=50;
-            herohp+=100;
-            notifyObservers(heroName + "leveled up!" + lvl);
+        if (effectiveHP > 0) {
+            herohp = effectiveHP;
+        } else {
+            herohp = 0;
         }
     }
-    public int calculateDamage(){
-        return (int)(damage*strategy.getMultiplier());
+    public void takePoisonDamage(PoisonBuilder poison) {
+        int hpDamage = poison.getDamage();
+        int armorDamage = poison.getArmorDamage();
+
+        herohp -= hpDamage;
+
+        armorBonusHP -= armorDamage;
+        if (armorBonusHP < 0) armorBonusHP = 0;
+
+        System.out.printf("%s poisoned! -%d HP, -%d armor bonus. Total HP: %d%n",
+                heroName, hpDamage, armorDamage, getTotalHP());
     }
 
-    public int heal(){
+
+    public void unlockedskills(AttackStrategy skill) {
+
+        boolean alreadyUnlocked = unlockedskills.stream().anyMatch(s -> s.getClass().equals(skill.getClass()));
+
+        if (!alreadyUnlocked) {
+            unlockedskills.add(skill);
+            notifyObservers(heroName + " unlocked skill " + skill.getClass().getSimpleName());
+        }
+    }
+
+
+    public void gainExp(int exp) {
+        System.out.println("Gained EXP: " + exp);
+        this.exp += exp;
+        System.out.println("Total EXP: " + this.exp);
+
+        while (this.exp >= this.lvl * 100) {
+            this.exp -= this.lvl * 100;
+            this.lvl++;
+            this.damage += 50;
+            this.herohp += 100;
+            notifyObservers(heroName + " level uped to " + this.lvl);
+            this.accept(new SkillUnlockVisitor());
+        }
+
+
+    }
+
+
+    public int heal() {
         return 20;
     }
 
-    public void calculateHeal(){
+    public void calculateHeal() {
         herohp = herohp + heal();
     }
 
-    public void evolveto(String evolveType){
+    public void evolveto(String evolveType) {
         this.evolveType = evolveType;
         notifyObservers(heroName + " evolved to " + evolveType);
     }
 
-    public void newHerotitle(String title){
+    public void newHerotitle(String title) {
         this.heroTitle = title;
-        notifyObservers(heroName + " got new title:" + heroTitle);
+        notifyObservers(heroName + " got new title " + title);
+    }
+
+
+    public void applyArtifact(ArtifactBuilder artifact) {
+        artifactDamageMultiplier *= artifact.getDamageMultiplier();
+        armorBonusHP += artifact.getBonusHP();
+        inventory.add(artifact);
+    }
+
+    public void tryAddArtifact(ArtifactBuilder artifact, int chance) {
+        int roll = (int) (Math.random() * 100);
+        if (roll <= chance) {
+            inventory.add(artifact);
+            applyArtifact(artifact);
+            System.out.println("Artifact dropped: " + artifact.getName());
+        } else {
+            System.out.println("No artifact dropped");
+        }
+    }
+    public List<AttackStrategy> getUnlockedSkills() {
+        return unlockedskills;
+    }
+
+    public void setStrategy(AttackStrategy s) {
+        this.strategy = s;
+    }
+
+
+    public void addGold(int amount) {
+        gold += amount;
+    }
+
+    public boolean spendGold(int amount) {
+        if (gold >= amount) {
+            gold -= amount;
+            return true;
+        }
+        return false;
+    }
+
+    public void addItem(Sellable item) {
+        inventory.add(item);
+    }
+
+    public void equipArmor(ArmorBuilder armor) {
+        armorBonusHP += armor.getDefense();
+        System.out.println("Armor equipped! +" + armor.getDefense() + " HP");
+    }
+    public void removeItem(Sellable item) {
+        inventory.remove(item);
+    }
+
+    public void showInventory() {
+        for (Sellable i : inventory) {
+            System.out.println(i.getName() + " (" + i.getValue() + ")");
+        }
+    }
+
+    public void addObserver(GameObserver observer) {
+        observers.add(observer);
+    }
+
+    public void removeObserver(GameObserver observer) {
+        observers.remove(observer);
+    }
+
+    public void notifyObservers(String message) {
+        EventManager.getInstance().notifyObservers("PlayerAction", message);
     }
 
 
@@ -114,36 +227,28 @@ public abstract class Hero implements Subject {
         return heroName;
     }
 
-    public int getHeroLevel(){
-        return lvl;
-    }
     public String getHeroType() {
         return heroType;
     }
+
     public int getHp() {
         return herohp;
     }
+
     public int getLevel() {
         return lvl;
     }
+
     public int getExp() {
         return exp;
     }
 
-    public void addObserver(Observer observer){
-        observers.add(observer);
+    public int getGold() {
+        return gold;
     }
-
-    public void removeObserver(Observer observer){
-        observers.remove(observer);
-    }
-
-    public void notifyObservers(String message){
-        for (Observer observer : observers) {
-            observer.update(message);
-        }
+    public List<Sellable> getInventory(){
+        return inventory;
     }
 
     public abstract void accept(Visitor visitor);
-
 }

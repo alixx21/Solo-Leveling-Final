@@ -1,8 +1,6 @@
 package Factory.Boss;
 
 
-import Factory.Hero.Hero;
-
 public class DemonKingA extends Boss {
     public DemonKingA(String BossName, String BossType){
         super("Baran","DemonKing");

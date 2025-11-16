@@ -11,6 +11,7 @@ public class Assassin extends Hero {
     private AttackStrategy shadowhit;
     private AttackStrategy shadowstep;
     private AttackStrategy daggerrush;
+    private int lvl = 1;
 
 
 
@@ -27,8 +28,10 @@ public class Assassin extends Hero {
         this.shadowhit = new ShadowHitC();
         this.shadowstep = new ShadowStepB();
         this.daggerrush = new DaggerRushA();
+        unlockedskills.add(handtohand);
+        unlockedskills.add(doublespike);
 
-        this.strategy= lunge;
+        this.strategy= doublespike;
 
     }
 
@@ -78,4 +81,8 @@ public class Assassin extends Hero {
         visitor.visitAssassin(this);
     }
 
+    @Override
+    public void notifyObservers(String eventType) {
+
+    }
 }

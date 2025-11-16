@@ -7,17 +7,17 @@ import Factory.Hero.Summoner;
 
 public class EvolutionVisitor implements Visitor {
     public void visitHealer(Healer healer){
-        if(healer.getHeroLevel()>=40) healer.evolveto("Celestial Healer");
+        if(healer.getLevel()>=40) healer.evolveto("Celestial Healer");
     }
     public void visitMage(Mage mage){
-        if (mage.getHeroLevel()>=40) mage.evolveto("Archmage");
+        if (mage.getLevel()>=40) mage.evolveto("Archmage");
 
     }
     public void visitAssassin(Assassin assassin){
-        if(assassin.getHeroLevel()>=40)assassin.evolveto("Phantom Slayer");
+        if(assassin.getLevel()>=40)assassin.evolveto("Phantom Slayer");
     }
     public void visitSummoner(Summoner summoner){
-        if(summoner.getHeroLevel()>=40) summoner.evolveto("Spirit King");
+        if(summoner.getLevel()>=40) summoner.evolveto("Spirit King");
     }
 
 }

@@ -36,6 +36,7 @@ public abstract class Monster {
 
     public void monsterresponce(Hero hero) {
         int dmg = this.monsterdmg;
+        System.out.println(monsterType + " attacked with " + dmg + " damage");
         hero.takeDamage(dmg);
 
     }

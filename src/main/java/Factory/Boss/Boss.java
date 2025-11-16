@@ -86,11 +86,19 @@ public abstract class Boss {
             if(answer==false){
                 int dmg = this.bossdmg;
                 hero.takeDamage(dmg);
+                System.out.println(bossName + " attacked with " + dmg + " damage");
             }else{
                 System.out.println("Blocked boss attack!");
             }
         }else if(choiceInt == 2){
             dodge(hero);
+            if(answer==false){
+                int dmg = this.bossdmg;
+                hero.takeDamage(dmg);
+                System.out.println(bossName + " attacked with " + dmg + " damage");
+            }else{
+                System.out.println("Dodged boss attack!");
+            }
         }
         else {
             System.out.println("Invalid Choice");

@@ -9,6 +9,7 @@ import Visitor.*;
 public class Healer extends Hero {
     private AttackStrategy lifetouch;
     private AttackStrategy blessingwave;
+    private int lvl = 1;
 
 
     public Healer(String heroName) {
@@ -40,5 +41,10 @@ public class Healer extends Hero {
     @Override
     public void accept(Visitor visitor) {
         visitor.visitHealer(this);
+    }
+
+    @Override
+    public void notifyObservers(String eventType) {
+
     }
 }

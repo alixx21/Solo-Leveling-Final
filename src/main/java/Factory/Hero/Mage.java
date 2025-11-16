@@ -2,7 +2,7 @@ package Factory.Hero;
 
 import Strategy.AttackStrategy;
 import Strategy.Mage.*;
-import Visitor.Visitor;
+import Visitor.*;
 
 public class Mage extends Hero {
     private AttackStrategy dragonbreath;
@@ -29,7 +29,10 @@ public class Mage extends Hero {
         this.storm = new StormC();
         this.thunder =  new ThunderB();
         this.stone = new StoneFallE();
-        this.strategy= fireball;
+        this.unlockedskills.add(stone);
+
+
+        this.strategy= stone;
     }
 
     public void stone(){
@@ -65,8 +68,26 @@ public class Mage extends Hero {
     public void accept(Visitor visitor){
         visitor.visitMage(this);
     }
+    public void gainExp(int exp) {
+        System.out.println("Gained EXP: " + exp);
+        this.exp += exp;
+        System.out.println("Total EXP: " + this.exp);
+
+        while (this.exp >= this.lvl * 100) {
+            this.exp -= this.lvl * 100;
+            this.lvl++;
+            this.damage += 50;
+            this.herohp += 100;
+            notifyObservers(heroName + " level uped to " + this.lvl);
+
+        }
+        this.accept(new SkillUnlockVisitor());
+
+    }
 
 
+    @Override
+    public void notifyObservers(String eventType) {
 
-
+    }
 }
