@@ -1,11 +1,12 @@
 package Facade;
 
-import Builder.DungeonBuilder;
+import Builder.*;
 import Facade.Items.DungeonFacade;
-import Observers.UserInterfaceNotifications;
 import Factory.Hero.*;
 import Factory.Monsters.*;
 import Factory.Boss.*;
+import Observers.BattleLogger;
+import Observers.Subject;
 import Strategy.AttackStrategy;
 
 import java.util.List;
@@ -18,147 +19,166 @@ public class GameFacade {
     private final MonsterFactory monsterFactory = new MonsterFactory();
     private final BossFactory bossFactory = new BossFactory();
     private final Scanner scanner = new Scanner(System.in);
-
-//    public GameFacade(Hero hero) {
-//        this.hero = hero;
-//        this.shop = new Shop(hero);
-//        UserInterfaceNotifications.registerAllNotifications();
-//    }
+    private String currentRank = "E"; // Текущий ранг охотника
 
     public GameFacade() {
-        UserInterfaceNotifications.registerAllNotifications();
-        this.shop = new Shop(null); // будет переприсвоен после создания героя
         createHeroAndStart();
     }
 
-    // ЕДИНСТВЕННЫЙ ПУБЛИЧНЫЙ МЕТОД — запускает всю игру
-    public void start() {
-        // Main вызывает только этот метод — и всё работает
-    }
-    public void createHeroAndStart() {
+    private void createHeroAndStart() {
+        System.out.println("""
+            ╔═══════════════════════════════════════════════════╗
+            ║           SYSTEM: PLAYER AWAKENED                 ║
+            ║                                                   ║
+            ║       You were the weakest... but now...          ║
+            ║               THE SYSTEM BELONGS TO YOU           ║
+            ╚═══════════════════════════════════════════════════╝
+            """);
+
         System.out.print("Enter your name, Hunter: ");
         String name = scanner.nextLine().trim();
         if (name.isEmpty()) name = "Sung Jin-Woo";
+
         HeroFactory factory = new HeroFactory();
-        int roll = (int)(Math.random() * 100);
-        if (roll < 5)      hero = factory.createHero("healer", name);
+        int roll = (int) (Math.random() * 100);
+        if (roll < 5) hero = factory.createHero("healer", name);
         else if (roll < 40) hero = factory.createHero("assassin", name);
         else if (roll < 70) hero = factory.createHero("mage", name);
-        else               hero = factory.createHero("summoner", name);
-
-        System.out.printf("""
-                ╔══════════════════════════════════════════════╗
-                ║           Welcome to Solo Leveling!          ║
-                ║                                              ║
-                ║    The adventure begins... Good luck, hero!  ║
-                ╚══════════════════════════════════════════════╝
-                
-                Initial Stats:
-                Health: %d
-                Gold: %d
-                Inventory: %d items
-                
-                """,hero.getHp(),hero.getGold(), hero.getInventory().size());
-
-
+        else hero = factory.createHero("summoner", name);
 
         this.shop = new Shop(hero);
-        System.out.println("\nAwakening complete. Rank: E → ???");
-        System.out.println("Class: " + hero.getClass().getSimpleName() + "\n");
-        enterDungeonFlow();
-    }
 
-    private void enterDungeonFlow() {
-        DungeonBuilder dungeon = dungeonFacade.createDungeon("e rank dungeon");
-        System.out.println("Dungeon: " + dungeon.getName());
-        System.out.println(dungeon.getDescription());
-        System.out.println("NPC: Others are fighting inside.");
-        System.out.println("NPC: Attack squad already went to the boss.");
-        System.out.println("NPC: Decide quickly.\n");
-
-        boolean inside = true;
-        while (inside) {
-            displayDungeonMenu();
-            int choice = scanner.nextInt();
-            scanner.nextLine(); // consume newline
-
-            switch (choice) {
-                case 1 -> clearWave();
-                case 2 -> fightBoss(dungeon);
-                case 3 -> {
-                    System.out.println("You left the dungeon.");
-                    inside = false;
-                }
-                case 4 -> openShop();
-                case 5 -> displayPlayerStats();
-                default -> System.out.println("Invalid choice, try again.");
-            }
-            System.out.println();
-        }
-    }
-
-    private void displayDungeonMenu() {
-        System.out.println("╔════════════════════════════════════╗");
-        System.out.println("║           DUNGEON MENU             ║");
-        System.out.println("╠════════════════════════════════════╣");
-        System.out.println("║ 1. Clear monsters                  ║");
-        System.out.println("║ 2. Go to boss                      ║");
-        System.out.println("║ 3. Leave dungeon                   ║");
-        System.out.println("║ 4. Shop                            ║");
-        System.out.println("║ 5. Player Stats                    ║");
-        System.out.println("╚════════════════════════════════════╝");
-        System.out.print("Choose: ");
-    }
-
-    private void clearWave() {
-        System.out.println("You engage the monsters.");
-        String[] monsterTypes = {"ants", "direwolf", "goblin"};
-
-        for (int i = 1; i <= 5; i++) {
-            String type = monsterTypes[(int)(Math.random() * monsterTypes.length)];
-            Monster monster = monsterFactory.createMonster(type);
-            System.out.println("Monster #" + i + ": " + monster.getMonsterType());
-
-            fightMonster(monster);
-
-            if (hero.getHp() <= 0) {
-                System.out.println("You were defeated. Game Over.");
-                System.exit(0);
-            }
-            System.out.println();
-        }
-        System.out.println("Wave cleared!");
-        afterWave();
-    }
-
-    private void afterWave() {
-        System.out.println("1. Clear more monsters");
-        System.out.println("2. Go to boss");
-        System.out.print("Choose: ");
-        int choice = scanner.nextInt();
+        System.out.printf("""
+            Awakening complete!
+            Class: %s
+            Rank: E → Awakened
+            HP: %d | Gold: %d
+            
+            Press Enter to begin your journey...
+            """, hero.getClass().getSimpleName(), hero.getTotalHP(), hero.getGold());
         scanner.nextLine();
 
-        if (choice == 1) {
-            clearWave();
-        } else if (choice == 2) {
-            System.out.println("Going to boss room.");
+        mainMenu();
+    }
+
+    // ГЛАВНОЕ МЕНЮ
+    private void mainMenu() {
+        while (true) {
+            System.out.println("\n╔══════════════════════════════════════════╗");
+            System.out.println("║         HUNTER ASSOCIATION               ║");
+            System.out.println("║ Hunter: " + hero.getHeroName() + " ".repeat(25 - hero.getHeroName().length()) + "║");
+            System.out.println("║ Rank: " + currentRank + "-Rank" + " ".repeat(30) + "║");
+            System.out.println("╠══════════════════════════════════════════╣");
+            System.out.println("║ 1. Enter Gate                            ║");
+            System.out.println("║ 2. Shop                                  ║");
+            System.out.println("║ 3. Inventory & Equip                     ║");
+            System.out.println("║ 4. Stats                                 ║");
+            System.out.println("║ 5. Exit                                  ║");
+            System.out.println("╚══════════════════════════════════════════╝");
+            System.out.print("Choose: ");
+
+            int choice = readInt();
+            switch (choice) {
+                case 1 -> chooseDungeon();
+                case 2 -> openShop();
+                case 3 -> showInventoryAndEquip();
+                case 4 -> displayPlayerStats();
+                case 5 -> {
+                    System.out.println("See you in the next Gate, Shadow Monarch.");
+                    return;
+                }
+                default -> System.out.println("Invalid choice!");
+            }
         }
     }
 
+    // ВЫБОР ДАНЖА
+    private void chooseDungeon() {
+        System.out.println("\nAvailable Gates:");
+        if (currentRank.compareTo("E") >= 0) System.out.println("  1. E-rank → Abandoned Mine");
+        if (currentRank.compareTo("D") >= 0) System.out.println("  2. D-rank → Orc Camp");
+        if (currentRank.compareTo("C") >= 0) System.out.println("  3. C-rank → Labyrinth of the Minotaur");
+        if (currentRank.compareTo("B") >= 0) System.out.println("  4. B-rank → Dragon's Lair");
+        if (currentRank.compareTo("A") >= 0) System.out.println("  5. A-rank → Goblin Cave");
+        if (currentRank.equals("S")) System.out.println("  6. S-rank → Realm of the Monarchs");
+
+        System.out.print("\nEnter number (0 to cancel): ");
+        int choice = readInt();
+
+        String dungeonType = switch (choice) {
+            case 1 -> "e rank dungeon";
+            case 2 -> "d rank dungeon";
+            case 3 -> "c rank dungeon";
+            case 4 -> "b rank dungeon";
+            case 5 -> "a rank dungeon";
+            case 6 -> "s rank dungeon";
+            default -> null;
+        };
+
+        if (dungeonType == null) return;
+
+        DungeonBuilder dungeon = dungeonFacade.createDungeon(dungeonType);
+        enterDungeon(dungeon);
+
+        // Повышаем ранг
+        currentRank = switch (dungeonType) {
+            case "e rank dungeon" -> "D";
+            case "d rank dungeon" -> "C";
+            case "c rank dungeon" -> "B";
+            case "b rank dungeon" -> "A";
+            case "a rank dungeon", "s rank dungeon" -> "S";
+            default -> currentRank;
+        };
+    }
+
+    // ВХОД В ДАНЖ
+    private void enterDungeon(DungeonBuilder dungeon) {
+        System.out.printf("\nGate opened: %s\n", dungeon.getName());
+        System.out.println(dungeon.getDescription() + "\n");
+
+        // Монстры
+        for (int i = 0; i < dungeon.getMonsters(); i++) {
+            String[] types = {"goblin", "direwolf", "orc", "demon", "skeleton"};
+            Monster m = monsterFactory.createMonster(types[(int)(Math.random() * types.length)]);
+            System.out.println("Monster appeared: " + m.getMonsterType());
+            fightMonster(m);
+            if (hero.getHp() <= 0) {
+                System.out.println("\nYou have been defeated... Game Over.");
+                System.exit(0);
+            }
+        }
+
+        // Босс
+        Boss boss = bossFactory.createBoss(dungeon.getBoss());
+        System.out.println("\nBOSS ROOM OPENED: " + boss.getBossName());
+        fightBoss(boss);
+
+        if (hero.getHp() > 0) {
+            System.out.println("\nGate cleared!");
+            hero.gainExp(dungeon.getExp());
+            hero.addGold(200 + dungeon.getExp());
+
+            if (dungeon.getArtifact() != null && Math.random() * 100 < dungeon.getArtifactDropChance()) {
+                Sellable artifact = dungeon.getArtifact();
+                hero.addItem(artifact);
+                System.out.println("LEGENDARY DROP: " + artifact.getName() + "!");
+            }
+        }
+    }
+
+    // БОЙ С МОНСТРОМ
     private void fightMonster(Monster monster) {
         while (monster.getMonsterhp() > 0 && hero.getHp() > 0) {
-            System.out.println(hero.getHeroName() + " HP: " + hero.getHp());
-            System.out.println(monster.getMonsterType() + " HP: " + monster.getMonsterhp());
+            System.out.printf("\n%s [HP: %d]  vs  %s [HP: %d]\n",
+                    hero.getHeroName(), hero.getHp(), monster.getMonsterType(), monster.getMonsterhp());
 
-            System.out.println("Choose attack:");
+            System.out.println("Choose skill:");
             List<AttackStrategy> skills = hero.getUnlockedSkills();
             for (int i = 0; i < skills.size(); i++) {
                 System.out.println((i + 1) + ". " + skills.get(i).getClass().getSimpleName());
             }
 
-            int idx = scanner.nextInt() - 1;
-            scanner.nextLine();
-
+            int idx = readInt() - 1;
             if (idx >= 0 && idx < skills.size()) {
                 hero.setStrategy(skills.get(idx));
                 hero.attack(monster);
@@ -167,112 +187,88 @@ public class GameFacade {
                     monster.monsterresponce(hero);
                 }
             } else {
-                System.out.println("Invalid choice!");
+                System.out.println("Invalid skill!");
             }
         }
         if (hero.getHp() > 0) {
-            System.out.println(monster.getMonsterType() + " defeated!");
+            System.out.println(monster.getMonsterType() + " defeated! +" + monster.getMonsterexpvalue() + " EXP");
             hero.gainExp(monster.getMonsterexpvalue());
         }
     }
 
-    private void fightBoss(DungeonBuilder dungeon) {
-        System.out.println("Boss room opened.");
-        Boss boss = bossFactory.createBoss(dungeon.getBoss());
-        System.out.println("Boss: " + boss.getBossName());
-
+    // БОЙ С БОССОМ
+    private void fightBoss(Boss boss) {
         while (boss.getBosshhp() > 0 && hero.getHp() > 0) {
-            System.out.println(hero.getHeroName() + " HP: " + hero.getHp());
-            System.out.println("Boss HP: " + boss.getBosshhp());
+            System.out.printf("\n%s [HP: %d]  vs  %s [HP: %d]\n",
+                    hero.getHeroName(), hero.getHp(), boss.getBossName(), boss.getBosshhp());
 
-            System.out.println("Choose attack:");
             List<AttackStrategy> skills = hero.getUnlockedSkills();
             for (int i = 0; i < skills.size(); i++) {
                 System.out.println((i + 1) + ". " + skills.get(i).getClass().getSimpleName());
             }
 
-            int idx = scanner.nextInt() - 1;
-            scanner.nextLine();
-
+            int idx = readInt() - 1;
             if (idx >= 0 && idx < skills.size()) {
                 hero.setStrategy(skills.get(idx));
                 hero.attackBoss(boss);
-            } else {
-                System.out.println("Invalid choice!");
             }
-        }
-
-        if (hero.getHp() > 0) {
-            System.out.println("Boss defeated!");
-            System.out.println("Reward: " + dungeon.getReward());
-            hero.gainExp(dungeon.getExp());
-            postBossMenu();
         }
     }
 
-    private void postBossMenu() {
-        boolean loop = true;
-        while (loop) {
-            System.out.println("1. Go to Shop");
-            System.out.println("2. Player Stats");
-            System.out.println("3. Exit");
-            System.out.print("Choose: ");
-            int choice = scanner.nextInt();
-            scanner.nextLine();
+    // ИНВЕНТАРЬ И ЭКИПИРОВКА
+    private void showInventoryAndEquip() {
+        if (hero.getInventory().isEmpty()) {
+            System.out.println("Inventory is empty.");
+            return;
+        }
 
-            switch (choice) {
-                case 1 -> openShop();
-                case 2 -> displayPlayerStats();
-                case 3 -> loop = false;
-                default -> System.out.println("Invalid choice");
-            }
+        System.out.println("\nInventory:");
+        for (int i = 0; i < hero.getInventory().size(); i++) {
+            Sellable item = hero.getInventory().get(i);
+            System.out.println((i + 1) + ". " + item.getName());
+        }
+
+        System.out.print("Equip (number) or 0 to exit: ");
+        int idx = readInt() - 1;
+        if (idx >= 0 && idx < hero.getInventory().size()) {
+            Sellable item = hero.getInventory().get(idx);
+            if (item instanceof WeaponBuilder w) hero.equipWeapon(w);
+            else if (item instanceof ArmorBuilder a) hero.equipArmor(a);
+            else if (item instanceof PoisonBuilder p) hero.equipPoison(p);
+            else if (item instanceof ArtifactBuilder a) hero.equipArtifact(a);
         }
     }
 
     private void openShop() {
         shop.displayWelcome();
-        System.out.print("Enter item name to buy or 'back': ");
-        String item = scanner.nextLine().trim();
-
-        if (!item.equalsIgnoreCase("back")) {
-            shop.buy(item);
+        System.out.print("Buy (item name) or 'back': ");
+        String input = scanner.nextLine().trim();
+        if (!input.equalsIgnoreCase("back")) {
+            shop.buy(input);
         }
     }
 
-    public void displayPlayerStats() {
+    private void displayPlayerStats() {
         System.out.printf("""
-                ╔════════════════════════════════════╗
-                ║    Gold: %6d       HP: %3d/%3d     ║
-                ║    Items: %2d                      ║
-                ║    Level: %2d      EXP: %3d        ║
-                ╚════════════════════════════════════╝
-                """,
-                hero.getGold(),
-                hero.getHp(),
-                hero.getTotalHP(),
-                hero.getInventory().size(),
-                hero.getLevel(),
-                hero.getExp());
+            ╔═══════════════════════════════════════════╗
+            ║               HUNTER STATUS               ║
+            ║ Name: %-33s ║
+            ║ Rank: %-3s       Level: %-3d   EXP: %-6d ║
+            ║ HP: %-4d/%-4d           Gold: %-6d     ║
+            ║ Inventory: %-2d items                     ║
+            ╚═══════════════════════════════════════════╝
+            """, hero.getHeroName(), currentRank, hero.getLevel(), hero.getExp(),
+                hero.getHp(), hero.getTotalHP(), hero.getGold(), hero.getInventory().size());
     }
 
-
-    public void createRandomHero(String playerName) {
-        HeroFactory heroFactory = new HeroFactory();
-        int chance = (int)(Math.random() * 100);
-
-        if (chance < 5) {
-            hero = heroFactory.createHero("healer", playerName);
-            System.out.println("Class: Healer");
-        } else if (chance < 40) {
-            hero = heroFactory.createHero("assassin", playerName);
-            System.out.println("Class: Assassin");
-        } else if (chance < 70) {
-            hero = heroFactory.createHero("mage", playerName);
-            System.out.println("Class: Mage");
-        } else {
-            hero = heroFactory.createHero("summoner", playerName);
-            System.out.println("Class: Summoner");
+    // Безопасное чтение int
+    private int readInt() {
+        while (true) {
+            try {
+                return Integer.parseInt(scanner.nextLine().trim());
+            } catch (Exception e) {
+                System.out.print("Enter a number: ");
+            }
         }
-        this.shop = new Shop(hero);
     }
 }

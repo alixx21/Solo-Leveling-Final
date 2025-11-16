@@ -1,9 +1,17 @@
 import Facade.GameFacade;
+import Observers.BattleLogger;
+import Observers.GameAnnouncer;
+
+import java.util.Scanner;
 
 public class Main {
     public static void main(String[] args) {
+        Scanner scanner = new Scanner(System.in);
 
-        new GameFacade().start();
+        BattleLogger logger = BattleLogger.getInstance();
+        GameAnnouncer announcer = new GameAnnouncer();
+
+        new GameFacade();
 
 
 

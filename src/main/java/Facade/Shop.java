@@ -2,7 +2,12 @@ package Facade;
 
 import Facade.Items.*;
 import Factory.Hero.Hero;
-import Observers.EventManager;
+import Observers.BattleLogger;
+import Observers.GameAnnouncer;
+import Observers.Observer;
+import Observers.Subject;
+
+import static Observers.Subject.*;
 
 public class Shop {
 
@@ -35,7 +40,7 @@ public class Shop {
             hero.addItem(item);
             System.out.println("Purchased: " + item.getName() + " for " + price + " gold");
 
-            EventManager.getInstance().notifyObservers("ItemPurchased");
+            hero.notifyObservers("ItemPurchased");
             return true;
         } else {
             System.out.println("Not enough gold! Required: " + price + " gold, you have: " + hero.getGold());
@@ -56,7 +61,7 @@ public class Shop {
 
         System.out.println("Sold " + item.getName() + " for " + sellPrice + " gold");
 
-        EventManager.getInstance().notifyObservers("GoldChanged");
+        hero.notifyObservers("GoldChanged");
     }
 
     public void displayWelcome() {
@@ -69,8 +74,7 @@ public class Shop {
                 ╚══════════════════════════════════════════════════╝
                 Available items:
                 Weapons: sword, spear, staff, bow, shuriken.
-                Armor: nightingale, dragonscale, titansteel, obsidian, shadowleaf, windrunner,
-                       ironclad, rangerset, stormforge.
+                Armor: nightingale, dragonscale, titansteel, obsidian, shadowleaf, windrunner,ironclad, rangerset, stormforge.
                 Poisons: acid, neurotoxin, bile, paralytic.
                 Artifacts: ring of strength, amulet of speed, crystal of focus.
                 

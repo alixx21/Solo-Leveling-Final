@@ -33,17 +33,16 @@ public class ArtifactBuilder implements Sellable {
         return damageMultiplier;
     }
 
-    public void setDamageMultiplier(double damageMultiplier) {
-        this.damageMultiplier = damageMultiplier;
-    }
+
 
     public int getBonusHP() {
         return bonusHP;
     }
 
-    public void setBonusHP(int bonusHP) {
-        this.bonusHP = bonusHP;
+    public double getEffect(){
+        return effect;
     }
+
 
 
     public static class Builder {

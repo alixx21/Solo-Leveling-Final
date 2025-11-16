@@ -10,14 +10,13 @@ import Strategy.AttackStrategy;
 import Visitor.Visitor;
 import Observers.*;
 import Builder.ArtifactBuilder;
-import Observers.EventManager;
 import Visitor.SkillUnlockVisitor;
 
 import java.util.ArrayList;
 import java.util.List;
 
-public abstract class Hero implements GameObserver {
-    private List<GameObserver> observers = new ArrayList<>();
+public abstract class Hero implements Subject  {
+    private List<Observer> observers = new ArrayList<>();
     public List<AttackStrategy> unlockedskills = new ArrayList<>();
     public List<Sellable> inventory = new ArrayList<>();
 
@@ -33,10 +32,10 @@ public abstract class Hero implements GameObserver {
     protected int exp = 0;
     private int gold = 100;
     private int armorBonusHP = 0;
-    private WeaponBuilder equippedWeapon = null;
-    private ArmorBuilder equippedArmor = null;
-    private PoisonBuilder equippedPoison = null;
-    private ArtifactBuilder equippedArtifact = null;
+    private WeaponBuilder equippedWeapon;
+    private ArmorBuilder equippedArmor;
+    private PoisonBuilder equippedPoison;
+    private List<ArtifactBuilder> equippedArtifacts = new ArrayList<>();
 
     protected Hero(String heroName, AttackStrategy strategy, String heroType) {
         this.heroName = heroName;
@@ -51,18 +50,7 @@ public abstract class Hero implements GameObserver {
     public int getTotalHP() {
         return herohp + armorBonusHP;
     }
-    public void attack(Monster monster) {
-        int finaldamage = calculateDamage();
-        monster.takeDamage(finaldamage);
-        notifyObservers(heroName + " attacks " + monster.getMonsterType() + " for " + finaldamage + " damage");
 
-        if (monster.monsterhp > 0) {
-            monster.monsterresponce(this);
-        } else {
-            notifyObservers(monster.getMonsterType() + " defeated");
-            gainExp(monster.getMonsterexpvalue());
-        }
-    }
 
     public void attackBoss(Boss boss) {
         int finaldamage = calculateDamage();
@@ -76,6 +64,29 @@ public abstract class Hero implements GameObserver {
             notifyObservers(boss.getBossName() + " defeated");
             gainExp(boss.getExpvalue());
         }
+    }
+
+    public void equipWeapon(WeaponBuilder weapon) {
+        this.equippedWeapon = weapon;
+        System.out.println("Equipped weapon: " + weapon.getName() + " (+" + weapon.getDamage() + " damage)");
+    }
+
+    public void equipArmor(ArmorBuilder armor) {
+        if (equippedArmor != null) armorBonusHP -= equippedArmor.getDefense();
+        this.equippedArmor = armor;
+        armorBonusHP += armor.getDefense();
+        System.out.println("Equipped armor: " + armor.getName() + " (+" + armor.getDefense() + " HP)");
+    }
+
+    public void equipPoison(PoisonBuilder poison) {
+        this.equippedPoison = poison;
+        System.out.println("Poison applied: " + poison.getName());
+    }
+
+    public void equipArtifact(ArtifactBuilder artifact) {
+        equippedArtifacts.add(artifact);
+        artifactDamageMultiplier *= artifact.getEffect();
+        System.out.println("Artifact activated: " + artifact.getName() + " (x" + artifact.getEffect() + " damage)");
     }
 
     public int calculateDamage() {
@@ -93,19 +104,6 @@ public abstract class Hero implements GameObserver {
             herohp = 0;
         }
     }
-    public void takePoisonDamage(PoisonBuilder poison) {
-        int hpDamage = poison.getDamage();
-        int armorDamage = poison.getArmorDamage();
-
-        herohp -= hpDamage;
-
-        armorBonusHP -= armorDamage;
-        if (armorBonusHP < 0) armorBonusHP = 0;
-
-        System.out.printf("%s poisoned! -%d HP, -%d armor bonus. Total HP: %d%n",
-                heroName, hpDamage, armorDamage, getTotalHP());
-    }
-
 
     public void unlockedskills(AttackStrategy skill) {
 
@@ -131,8 +129,6 @@ public abstract class Hero implements GameObserver {
             notifyObservers(heroName + " level uped to " + this.lvl);
             this.accept(new SkillUnlockVisitor());
         }
-
-
     }
 
 
@@ -196,10 +192,6 @@ public abstract class Hero implements GameObserver {
         inventory.add(item);
     }
 
-    public void equipArmor(ArmorBuilder armor) {
-        armorBonusHP += armor.getDefense();
-        System.out.println("Armor equipped! +" + armor.getDefense() + " HP");
-    }
     public void removeItem(Sellable item) {
         inventory.remove(item);
     }
@@ -210,16 +202,21 @@ public abstract class Hero implements GameObserver {
         }
     }
 
-    public void addObserver(GameObserver observer) {
+    @Override
+    public void addObserver(Observer observer) {
         observers.add(observer);
     }
 
-    public void removeObserver(GameObserver observer) {
+    @Override
+    public void removeObserver(Observer observer) {
         observers.remove(observer);
     }
 
+    @Override
     public void notifyObservers(String message) {
-        EventManager.getInstance().notifyObservers("PlayerAction", message);
+        for (Observer observer : observers) {
+            observer.update(message);
+        }
     }
 
 
@@ -251,4 +248,18 @@ public abstract class Hero implements GameObserver {
     }
 
     public abstract void accept(Visitor visitor);
+
+    public void attack(Monster monster) {
+        int finaldamage = calculateDamage();
+        monster.takeDamage(finaldamage);
+        notifyObservers(heroName + " attacks " + monster.getMonsterType() + " for " + finaldamage + " damage");
+
+
+        if (monster.getMonsterexpvalue() > 0) {
+            monster.monsterresponce(this);
+        } else {
+            notifyObservers(monster.getMonsterType() + " defeated");
+            gainExp(monster.getMonsterexpvalue());
+        }
+    }
 }

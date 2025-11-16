@@ -29,10 +29,10 @@ public class WeaponBuilder implements Sellable {
         return value;
     }
 
-//    @Override
-//    public int getDamage() {
-//        return damage;
-//    }
+
+    public int getDamage() {
+        return damage;
+    }
 
     public static class Builder {
         private String name;
